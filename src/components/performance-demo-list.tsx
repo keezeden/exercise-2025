@@ -1,5 +1,7 @@
 "use client";
 
+import { Grid } from "react-window";
+
 import { useMemo, useState } from "react";
 import { PerformanceDemoItem } from "./performance-demo-item";
 
@@ -18,6 +20,10 @@ const generateItems = (count: number) => {
 };
 
 const ITEMS = generateItems(5000); // 5000 items to cause performance issues
+
+const COLUMNS = 4;
+const ITEM_HEIGHT = 250;
+const ITEM_WIDTH = 250;
 
 export function PerformanceDemoList() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,6 +62,7 @@ export function PerformanceDemoList() {
 
   // Generate categories for filter
   const categories = ["all", ...Array.from(new Set(ITEMS.map((item) => item.category)))];
+  const rowCount = Math.ceil(sortedItems.length / COLUMNS);
 
   return (
     <div className="space-y-6">
@@ -119,16 +126,15 @@ export function PerformanceDemoList() {
         </div>
       </div>
 
-      {/* The expensive list - renders all items without virtualization */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {sortedItems.map((item) => (
-          <PerformanceDemoItem
-            key={item.id}
-            item={item}
-            searchTerm={searchTerm} // Passing searchTerm causes unnecessary re-renders
-          />
-        ))}
-      </div>
+      <Grid
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+        cellComponent={PerformanceDemoItem}
+        cellProps={{ items: sortedItems, searchTerm }}
+        columnCount={COLUMNS}
+        columnWidth={ITEM_WIDTH}
+        rowCount={rowCount}
+        rowHeight={ITEM_HEIGHT}
+      />
     </div>
   );
 }

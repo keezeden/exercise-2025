@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { CellComponentProps } from "react-window";
 
 interface Item {
   id: number;
@@ -14,34 +15,40 @@ interface Item {
 }
 
 interface PerformanceDemoItemProps {
-  item: Item;
+  items: Item[];
   searchTerm: string; // This prop causes unnecessary re-renders
 }
 
-export function PerformanceDemoItem({ item, searchTerm }: PerformanceDemoItemProps) {
+export function PerformanceDemoItem({
+  items,
+  searchTerm,
+  columnIndex,
+  rowIndex,
+}: CellComponentProps<PerformanceDemoItemProps>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // Expensive computation that runs on every render - performance issue #3
-  const highlightedName = item.name.split(new RegExp(`(${searchTerm})`, 'gi')).map((part, i) => (
-    <span
-      key={i}
-      className={part.toLowerCase() === searchTerm.toLowerCase() ? 'bg-yellow-200' : ''}
-    >
-      {part}
-    </span>
-  ));
+  const COLUMNS = 4;
+  const index = rowIndex * COLUMNS + columnIndex;
+  const item = items[index];
 
-  // Another expensive computation - performance issue #4
-  const highlightedDescription = item.description.split(new RegExp(`(${searchTerm})`, 'gi')).map((part, i) => (
-    <span
-      key={i}
-      className={part.toLowerCase() === searchTerm.toLowerCase() ? 'bg-yellow-200' : ''}
-    >
-      {part}
-    </span>
-  ));
+  // Expensive computation that runs on every render - performance issue #3
+  // const highlightedName = item.name.split("").map((part, i) => (
+  //   <span key={i} className={part.toLowerCase() === searchTerm.toLowerCase() ? "bg-yellow-200" : ""}>
+  //     {part}
+  //   </span>
+  // ));
+
+  // // Another expensive computation - performance issue #4
+  // const highlightedDescription = item.description.split("").map((part, i) => (
+  //   <span key={i} className={part.toLowerCase() === searchTerm.toLowerCase() ? "bg-yellow-200" : ""}>
+  //     {part}
+  //   </span>
+  // ));
+
+  const highlightedName = "test";
+  const highlightedDescription = "test";
 
   // Expensive operation that doesn't need to run on every render
   const relatedItems = Array.from({ length: 10 }, (_, i) => ({
@@ -57,35 +64,32 @@ export function PerformanceDemoItem({ item, searchTerm }: PerformanceDemoItemPro
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-lg text-gray-900">
-          {searchTerm ? highlightedName : item.name}
-        </h3>
+        <h3 className="font-semibold text-lg text-gray-900">{searchTerm ? highlightedName : item.name}</h3>
         <button
           onClick={() => setIsFavorite(!isFavorite)}
-          className={`text-xl ${isFavorite ? 'text-red-500' : 'text-gray-300'}`}
+          className={`text-xl ${isFavorite ? "text-red-500" : "text-gray-300"}`}
         >
           ♥
         </button>
       </div>
 
-      <div className="text-sm text-gray-600 mb-2">
-        {searchTerm ? highlightedDescription : item.description}
-      </div>
+      <div className="text-sm text-gray-600 mb-2">{searchTerm ? highlightedDescription : item.description}</div>
 
       <div className="flex justify-between items-center mb-2">
-        <span className="text-lg font-bold text-green-600">
-          ${item.price}
-        </span>
-        <span className={`px-2 py-1 rounded text-xs ${
-          item.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`}>
-          {item.inStock ? 'In Stock' : 'Out of Stock'}
+        <span className="text-lg font-bold text-green-600">${item.price}</span>
+        <span
+          className={`px-2 py-1 rounded text-xs ${
+            item.inStock ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+          }`}
+        >
+          {item.inStock ? "In Stock" : "Out of Stock"}
         </span>
       </div>
 
       <div className="flex items-center mb-2">
         <span className="text-yellow-400">
-          {'★'.repeat(item.rating)}{'☆'.repeat(5 - item.rating)}
+          {"★".repeat(item.rating)}
+          {"☆".repeat(5 - item.rating)}
         </span>
         <span className="ml-2 text-sm text-gray-600">({item.rating}/5)</span>
       </div>
@@ -94,10 +98,7 @@ export function PerformanceDemoItem({ item, searchTerm }: PerformanceDemoItemPro
         <div className="text-xs text-gray-500 mb-1">Tags:</div>
         <div className="flex flex-wrap gap-1">
           {item.tags.map((tag) => (
-            <span
-              key={tag}
-              className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
-            >
+            <span key={tag} className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
               {tag}
             </span>
           ))}
@@ -141,20 +142,17 @@ export function PerformanceDemoItem({ item, searchTerm }: PerformanceDemoItemPro
             -
           </button>
           <span className="px-2">{quantity}</span>
-          <button
-            onClick={() => setQuantity(quantity + 1)}
-            className="px-2 py-1 bg-gray-200 rounded text-sm"
-          >
+          <button onClick={() => setQuantity(quantity + 1)} className="px-2 py-1 bg-gray-200 rounded text-sm">
             +
           </button>
         </div>
-        
+
         <div className="space-x-2">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
           >
-            {isExpanded ? 'Less' : 'More'}
+            {isExpanded ? "Less" : "More"}
           </button>
           <button
             disabled={!item.inStock}
