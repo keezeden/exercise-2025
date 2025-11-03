@@ -16,14 +16,14 @@ interface Item {
 
 interface PerformanceDemoItemProps {
   items: Item[];
-  searchTerm: string; // This prop causes unnecessary re-renders
+  searchTerm: string;
 }
 
 export function PerformanceDemoItem({
   items,
-  searchTerm,
   columnIndex,
   rowIndex,
+  searchTerm,
 }: CellComponentProps<PerformanceDemoItemProps>) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [quantity, setQuantity] = useState(1);
@@ -32,6 +32,9 @@ export function PerformanceDemoItem({
   const COLUMNS = 4;
   const index = rowIndex * COLUMNS + columnIndex;
   const item = items[index];
+
+  // Return empty fragment as react-virtualize complains about `null`
+  if (!item) <></>;
 
   // Expensive computation that runs on every render - performance issue #3
   // const highlightedName = item.name.split("").map((part, i) => (
@@ -47,8 +50,8 @@ export function PerformanceDemoItem({
   //   </span>
   // ));
 
-  const highlightedName = "test";
-  const highlightedDescription = "test";
+  const highlightedName = item?.name;
+  const highlightedDescription = item?.name;
 
   // Expensive operation that doesn't need to run on every render
   const relatedItems = Array.from({ length: 10 }, (_, i) => ({

@@ -1,12 +1,23 @@
 "use client";
 
 import { Grid } from "react-window";
-
-import { useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { PerformanceDemoItem } from "./performance-demo-item";
+import { useDebounce } from "@/lib/hooks/debounce";
+
+type Item = {
+  id: number;
+  name: string;
+  description: string;
+  price: number;
+  category: string;
+  tags: string[];
+  inStock: boolean;
+  rating: number;
+};
 
 // Generate a large dataset
-const generateItems = (count: number) => {
+const generateItems = (count: number): Item[] => {
   return Array.from({ length: count }, (_, i) => ({
     id: i,
     name: `Item ${i}`,
@@ -20,6 +31,8 @@ const generateItems = (count: number) => {
 };
 
 const ITEMS = generateItems(5000); // 5000 items to cause performance issues
+// Generate categories for filter
+const categories = ["all", ...Array.from(new Set(ITEMS.map((item) => item.category)))];
 
 const COLUMNS = 4;
 const ITEM_HEIGHT = 250;
@@ -31,38 +44,45 @@ export function PerformanceDemoList() {
   const [sortBy, setSortBy] = useState("name");
   const [showInStockOnly, setShowInStockOnly] = useState(false);
 
-  // This filter runs on every render - performance issue #1
-  const filteredItems = useMemo(
-    () =>
-      ITEMS.filter((item) => {
-        const matchesSearch =
-          item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesCategory = selectedCategory === "all" || item.category === selectedCategory;
-        const matchesStock = !showInStockOnly || item.inStock;
+  const [matchedItems, setMatchedItems] = useState<Item[]>(ITEMS);
 
-        return matchesSearch && matchesCategory && matchesStock;
-      }),
-    [searchTerm]
+  const search = useDebounce((term: string, category: string, stockOnly: boolean, sort: string) => {
+    const filteredItems = ITEMS.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(term.toLowerCase()) ||
+        item.description.toLowerCase().includes(term.toLowerCase());
+      const matchesCategory = category === "all" || item.category === category;
+      const matchesStock = !stockOnly || item.inStock;
+
+      return matchesSearch && matchesCategory && matchesStock;
+    });
+
+    const sortedItems = [...filteredItems].sort((a, b) => {
+      switch (sort) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "price":
+          return a.price - b.price;
+        case "rating":
+          return b.rating - a.rating;
+        default:
+          return 0;
+      }
+    });
+
+    setMatchedItems(sortedItems);
+  }, 300);
+
+  useEffect(() => {
+    search(searchTerm, selectedCategory, showInStockOnly, sortBy);
+  }, [searchTerm, selectedCategory, showInStockOnly, sortBy]);
+
+  const rowCount = Math.ceil(matchedItems.length / COLUMNS);
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  const cellProps = useMemo(
+    () => ({ items: matchedItems, searchTerm: deferredSearchTerm }),
+    [matchedItems, deferredSearchTerm]
   );
-
-  // This sort runs on every render - performance issue #2
-  const sortedItems = [...filteredItems].sort((a, b) => {
-    switch (sortBy) {
-      case "name":
-        return a.name.localeCompare(b.name);
-      case "price":
-        return a.price - b.price;
-      case "rating":
-        return b.rating - a.rating;
-      default:
-        return 0;
-    }
-  });
-
-  // Generate categories for filter
-  const categories = ["all", ...Array.from(new Set(ITEMS.map((item) => item.category)))];
-  const rowCount = Math.ceil(sortedItems.length / COLUMNS);
 
   return (
     <div className="space-y-6">
@@ -74,7 +94,9 @@ export function PerformanceDemoList() {
             <input
               type="text"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
               placeholder="Search items..."
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
@@ -122,14 +144,14 @@ export function PerformanceDemoList() {
         </div>
 
         <div className="text-sm text-gray-600">
-          Showing {sortedItems.length} of {ITEMS.length} items
+          Showing {matchedItems.length} of {ITEMS.length} items
         </div>
       </div>
 
       <Grid
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
         cellComponent={PerformanceDemoItem}
-        cellProps={{ items: sortedItems, searchTerm }}
+        cellProps={cellProps}
         columnCount={COLUMNS}
         columnWidth={ITEM_WIDTH}
         rowCount={rowCount}
