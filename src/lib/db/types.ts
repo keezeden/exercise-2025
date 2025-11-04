@@ -1,8 +1,4 @@
-import {
-  createInsertSchema,
-  createSelectSchema,
-  createUpdateSchema,
-} from "drizzle-zod";
+import { createInsertSchema, createSelectSchema, createUpdateSchema } from "drizzle-zod";
 import { users, posts } from "./schema";
 import z from "zod";
 
@@ -28,7 +24,9 @@ export const updatePostSchema = createUpdateSchema(posts, {
 });
 
 // Types
-export type User = typeof users.$inferSelect;
+export type UserWithHash = typeof users.$inferSelect;
+// Use this instead
+export type User = Omit<UserWithHash, "hashedPassword">;
 export type NewUser = typeof users.$inferInsert;
 export type Post = typeof posts.$inferSelect;
 export type NewPost = typeof posts.$inferInsert;
