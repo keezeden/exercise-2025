@@ -19,6 +19,30 @@ interface PerformanceDemoItemProps {
   searchTerm: string;
 }
 
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function highlightText(text: string, query: string) {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) {
+    return text;
+  }
+
+  const normalizedQuery = trimmedQuery.toLowerCase();
+  const regex = new RegExp(`(${escapeRegExp(trimmedQuery)})`, "ig");
+
+  return text.split(regex).map((part, index) =>
+    part.toLowerCase() === normalizedQuery ? (
+      <mark key={index} className="bg-yellow-200">
+        {part}
+      </mark>
+    ) : (
+      <span key={index}>{part}</span>
+    )
+  );
+}
+
 export function PerformanceDemoItem({
   items,
   columnIndex,
@@ -34,24 +58,10 @@ export function PerformanceDemoItem({
   const item = items[index];
 
   // Return empty fragment as react-virtualize complains about `null`
-  if (!item) <></>;
+  if (!item) return <></>;
 
-  // Expensive computation that runs on every render - performance issue #3
-  // const highlightedName = item.name.split("").map((part, i) => (
-  //   <span key={i} className={part.toLowerCase() === searchTerm.toLowerCase() ? "bg-yellow-200" : ""}>
-  //     {part}
-  //   </span>
-  // ));
-
-  // // Another expensive computation - performance issue #4
-  // const highlightedDescription = item.description.split("").map((part, i) => (
-  //   <span key={i} className={part.toLowerCase() === searchTerm.toLowerCase() ? "bg-yellow-200" : ""}>
-  //     {part}
-  //   </span>
-  // ));
-
-  const highlightedName = item?.name;
-  const highlightedDescription = item?.name;
+  const highlightedName = highlightText(item.name, searchTerm);
+  const highlightedDescription = highlightText(item.description, searchTerm);
 
   // Expensive operation that doesn't need to run on every render
   const relatedItems = Array.from({ length: 10 }, (_, i) => ({
@@ -67,7 +77,7 @@ export function PerformanceDemoItem({
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-2">
-        <h3 className="font-semibold text-lg text-gray-900">{searchTerm ? highlightedName : item.name}</h3>
+        <h3 className="font-semibold text-lg text-gray-900">{highlightedName}</h3>
         <button
           onClick={() => setIsFavorite(!isFavorite)}
           className={`text-xl ${isFavorite ? "text-red-500" : "text-gray-300"}`}
@@ -76,7 +86,7 @@ export function PerformanceDemoItem({
         </button>
       </div>
 
-      <div className="text-sm text-gray-600 mb-2">{searchTerm ? highlightedDescription : item.description}</div>
+      <div className="text-sm text-gray-600 mb-2">{highlightedDescription}</div>
 
       <div className="flex justify-between items-center mb-2">
         <span className="text-lg font-bold text-green-600">${item.price}</span>
