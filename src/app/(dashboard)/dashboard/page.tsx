@@ -1,13 +1,14 @@
 import { getSession } from "@/lib/auth/utils";
 import { getUserWithPosts } from "@/lib/data/users";
-import { getPostsWithAuthors, getAllPosts } from "@/lib/data/posts";
 import { UserProfile } from "@/components/user-profile";
-import { PostsList } from "@/components/posts-list";
 import { DashboardStats } from "@/components/dashboard-stats";
-import { PrefetchedPosts } from "@/components/prefetched-posts";
+import { LatestPosts } from "@/components/latest-posts";
 import { CreatePostForm } from "@/components/create-post-form";
 import { logoutAction } from "@/lib/auth/actions";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
+import { LoadingSkeleton } from "@/components/loading";
+import { PostsList } from "@/components/posts-list";
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -17,8 +18,6 @@ export default async function DashboardPage() {
   }
 
   const userData = await getUserWithPosts(session.userId);
-  const allPosts = await getPostsWithAuthors();
-  const postsPromise = getAllPosts();
 
   if (!userData) {
     redirect("/login");
@@ -44,7 +43,13 @@ export default async function DashboardPage() {
 
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <DashboardStats />
+          <Suspense
+            fallback={
+              <LoadingSkeleton variant="boxes" className="grid grid-cols-3 gap-4 mb-6" itemClassName="w-full" />
+            }
+          >
+            <DashboardStats />
+          </Suspense>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-1">
@@ -63,18 +68,21 @@ export default async function DashboardPage() {
               </div>
 
               <div className="mt-6 bg-white shadow rounded-lg p-6">
-                <PrefetchedPosts postsPromise={postsPromise} />
+                <h3 className="text-lg font-semibold text-gray-900">Latest Posts</h3>
+                <Suspense fallback={<LoadingSkeleton variant="lines" itemClassName="h-16" />}>
+                  <LatestPosts />
+                </Suspense>
               </div>
             </div>
 
             <div className="lg:col-span-3">
               <CreatePostForm />
-              
+
               <div className="bg-white shadow rounded-lg p-6">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                  All Posts
-                </h2>
-                <PostsList posts={allPosts} />
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">All Posts</h2>
+                <Suspense fallback={<LoadingSkeleton variant="lines" itemClassName="h-32" />}>
+                  <PostsList />
+                </Suspense>
               </div>
             </div>
           </div>

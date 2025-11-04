@@ -1,29 +1,30 @@
-import { db } from '@/lib/db';
-import { users, posts } from '@/lib/db/schema';
-import { sum } from 'drizzle-orm';
+import { db } from "@/lib/db";
+import { users, posts } from "@/lib/db/schema";
+import { sum } from "drizzle-orm";
+import { use } from "react";
 
 async function getTotalUsers() {
-  await new Promise(resolve => setTimeout(resolve, 800));
+  await new Promise((resolve) => setTimeout(resolve, 800));
   const userCount = await db.select().from(users);
   return userCount.length;
 }
 
 async function getTotalPosts() {
-  await new Promise(resolve => setTimeout(resolve, 600));
+  await new Promise((resolve) => setTimeout(resolve, 600));
   const postCount = await db.select().from(posts);
   return postCount.length;
 }
 
 async function getTotalLikes() {
-  await new Promise(resolve => setTimeout(resolve, 400));
+  await new Promise((resolve) => setTimeout(resolve, 400));
   const [result] = await db.select({ total: sum(posts.likeCount) }).from(posts);
   return result.total || 0;
 }
 
-export async function DashboardStats() {
-  const totalUsers = await getTotalUsers();
-  const totalPosts = await getTotalPosts();
-  const totalLikes = await getTotalLikes();
+export function DashboardStats() {
+  const totalUsers = use(getTotalUsers());
+  const totalPosts = use(getTotalPosts());
+  const totalLikes = use(getTotalLikes());
 
   return (
     <div className="grid grid-cols-3 gap-4 mb-6">
