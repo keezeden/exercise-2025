@@ -1,6 +1,6 @@
 # Approach to solving tasks
 
-I started with the react performance as I was confident I could implement this with minimal research. I started by investigating how the search and filtering was handled, but realised each performance issue contributed significantly to the over latency, so I stubbed out a few of them to better see if my changes were improving performance. This took me ~1 hour to refactor the main search and filtering to be more optimal, although there is still some latency I didnt get around to solving, which may be attributed to indexing issues I didnt get around to.
+I started with the react performance as I was confident I could implement this with minimal research. I started by investigating how the search and filtering was handled, but realised each performance issue contributed significantly to the over latency, so I stubbed out a few of them to better see if my changes were improving performance. This took me ~1 hour to refactor the main search and filtering to be more optimal, and add `react-window` for virtualization. There is still some latency which I didnt have time to investigate.
 
 Deciding to move along to other tasks, I then used `codex` to summarise the other problems and give me a general summary and problem files to investigate. Before continuing I took a lunch break and came back a few hours later if youre concerned with the gap in my commit times.
 
