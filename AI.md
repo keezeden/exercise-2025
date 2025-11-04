@@ -1,3 +1,7 @@
+# AI Usage
+
+I usually use `codex` (I was an avid `claude` user, but feel `codex` is much better at being surgical in its changes without rewriting your entire project) and generally use it for high level code search, architecture and design questions, and small supervised tasks or boilerplate.
+
 ## Prompts
 
 "Look at the README.md tasks and give a high level direction of where to start investigating these tasks"
